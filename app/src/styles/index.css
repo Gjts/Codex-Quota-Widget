@@ -1,0 +1,46 @@
+@import "tailwindcss";
+
+/*
+ * 修仙风主题色板 (Xianxia palette)
+ * Tailwind v4 reads these custom properties and generates matching utilities
+ * such as `bg-spirit-glow`, `text-spirit-glow`, `border-spirit-deep`, etc.
+ */
+@theme {
+  --color-spirit-glow: #7df9ff;
+  --color-spirit-cyan: #38e1ff;
+  --color-spirit-deep: #0b1220;
+  --font-sans: "PingFang SC", "Microsoft YaHei", system-ui, -apple-system,
+    "Segoe UI", sans-serif;
+}
+
+/*
+ * The Tauri window is (from Phase 1 onward) transparent and frameless.
+ * Keep the document chrome see-through so only the widget card is visible.
+ */
+html,
+body,
+#root {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  height: 100%;
+  background: transparent;
+}
+
+body {
+  font-family: var(--font-sans);
+  overflow: hidden;
+  -webkit-user-select: none;
+  user-select: none;
+  cursor: default;
+}
+
+/* Interactive controls must opt out of the window-drag behaviour. */
+button,
+input,
+select,
+textarea,
+a,
+[data-no-drag] {
+  -webkit-app-region: no-drag;
+}

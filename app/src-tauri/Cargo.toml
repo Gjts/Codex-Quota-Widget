@@ -1,0 +1,30 @@
+[package]
+name = "codex-quota-widget"
+version = "0.1.0"
+description = "修仙风 Codex 额度桌面悬浮小组件 / Xianxia-themed Codex quota desktop widget"
+authors = ["Codex Quota Widget"]
+edition = "2021"
+rust-version = "1.77.2"
+
+# The `_lib` suffix avoids a name clash with the binary on Windows.
+[lib]
+name = "codex_quota_widget_lib"
+crate-type = ["staticlib", "cdylib", "rlib"]
+
+[build-dependencies]
+tauri-build = { version = "2", features = [] }
+
+[dependencies]
+tauri = { version = "2", features = ["tray-icon"] }
+tauri-plugin-store = "2"
+tauri-plugin-notification = "2"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+
+# Slim release binary for a long-running desktop widget. `thin` LTO keeps the
+# build time reasonable while still trimming size.
+[profile.release]
+panic = "abort"
+lto = "thin"
+opt-level = "s"
+strip = true

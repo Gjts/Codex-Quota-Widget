@@ -1,0 +1,13 @@
+# Claude Code local config
+.claude/
+
+# OS junk
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Build artifacts (also covered by app/.gitignore)
+**/node_modules/
+**/dist/
+app/src-tauri/target/
+app/src-tauri/gen/schemas/
