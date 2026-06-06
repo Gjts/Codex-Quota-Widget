@@ -26,6 +26,7 @@ export function FloatingWidget({
 }: FloatingWidgetProps) {
   const quota = useAppStore((s) => s.quota);
   const settings = useAppStore((s) => s.settings);
+  const syncError = useAppStore((s) => s.syncError);
   const overall = selectOverallStatus(quota);
 
   return (
@@ -44,6 +45,15 @@ export function FloatingWidget({
             className="flex items-center gap-1 text-[11px] font-semibold"
           >
             <span aria-hidden>🦊</span> 灵狐小管家
+            {syncError && (
+              <span
+                title={syncError}
+                aria-label={`自动读取异常：${syncError}`}
+                className="cursor-help text-amber-300"
+              >
+                ⚠
+              </span>
+            )}
           </span>
           <WidgetActions
             pinned={settings.alwaysOnTop}

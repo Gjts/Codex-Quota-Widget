@@ -68,11 +68,16 @@ export interface AppStore {
   tick: () => void;
   /** Replace state from persistence (Phase 5). */
   hydrate: (data: { quota?: QuotaState; settings?: AppSettings }) => void;
+  /** Last auto-read error (runtime only, never persisted); null when healthy. */
+  syncError: string | null;
+  /** Set or clear the auto-read error shown on the widget. */
+  setSyncError: (error: string | null) => void;
 }
 
 export const useAppStore = create<AppStore>((set, get) => ({
   quota: createMockQuota(),
   settings: DEFAULT_SETTINGS,
+  syncError: null,
 
   setQuota: (input) => {
     const now = Date.now();
@@ -134,6 +139,8 @@ export const useAppStore = create<AppStore>((set, get) => ({
       settings: settings ? { ...DEFAULT_SETTINGS, ...settings } : state.settings,
     }));
   },
+
+  setSyncError: (error) => set({ syncError: error }),
 }));
 
 /** Derive one overall widget status from both cycles (worse one wins). */

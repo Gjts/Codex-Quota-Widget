@@ -29,6 +29,7 @@ export default function App() {
   const settings = useAppStore((s) => s.settings);
   const updateSettings = useAppStore((s) => s.updateSettings);
   const setQuota = useAppStore((s) => s.setQuota);
+  const setSyncError = useAppStore((s) => s.setSyncError);
   const hydrate = useAppStore((s) => s.hydrate);
   const hydratedRef = useRef(false);
 
@@ -38,14 +39,20 @@ export default function App() {
       const input = await readCodexQuota();
       if (input) {
         setQuota(input);
+        setSyncError(null);
         return true;
       }
       return false;
     } catch (e) {
       console.error("[quota] Codex refresh failed", e);
+      setSyncError(
+        typeof e === "string"
+          ? e
+          : "自动读取额度失败，请检查 Codex 是否已安装",
+      );
       return false;
     }
-  }, [setQuota]);
+  }, [setQuota, setSyncError]);
 
   const reloadFromDisk = useCallback(async () => {
     const { settings: ps, quota: pq } = await loadPersisted();
@@ -135,7 +142,10 @@ export default function App() {
   // Periodic auto-read from the local Codex app-server. Gated on the toggle,
   // and backs off (stops) after repeated failures (e.g. Codex not installed).
   useEffect(() => {
-    if (!isTauri() || !settings.autoReadEnabled) return;
+    if (!isTauri() || !settings.autoReadEnabled) {
+      setSyncError(null);
+      return;
+    }
     let failures = 0;
     let timer: number | undefined;
     const tick = async () => {
@@ -143,6 +153,9 @@ export default function App() {
       failures = ok ? 0 : failures + 1;
       if (failures >= MAX_AUTO_READ_FAILURES && timer !== undefined) {
         window.clearInterval(timer);
+        setSyncError(
+          "自动读取已暂停（多次失败），请手动刷新或在设置中重新开启",
+        );
         console.warn(
           "[quota] auto-read paused after repeated failures — refresh manually or re-toggle it in settings.",
         );
@@ -153,7 +166,12 @@ export default function App() {
     return () => {
       if (timer !== undefined) window.clearInterval(timer);
     };
-  }, [settings.autoReadEnabled, settings.quotaRefreshIntervalMinutes, readFromCodex]);
+  }, [
+    settings.autoReadEnabled,
+    settings.quotaRefreshIntervalMinutes,
+    readFromCodex,
+    setSyncError,
+  ]);
 
   const openSettings = () => {
     void setWidgetSize(...SETTINGS_SIZE);
