@@ -50,15 +50,16 @@ export function SettingsPanel({ onClose }: SettingsPanelProps) {
   };
 
   const [thresholdError, setThresholdError] = useState<string | null>(null);
-  const changeThreshold = (
-    key: "warningThreshold" | "dangerThreshold",
-    value: number,
-  ) => {
-    const next = { ...settings, [key]: value };
-    const v = validateThresholds(next.warningThreshold, next.dangerThreshold);
+  const [warnInput, setWarnInput] = useState(settings.warningThreshold);
+  const [dangerInput, setDangerInput] = useState(settings.dangerThreshold);
+  // Buffer both threshold inputs locally so an intermediate invalid state
+  // (e.g. danger >= warning while typing) is shown instead of being snapped
+  // back; only a valid pair is committed to settings.
+  const applyThresholds = (warning: number, danger: number) => {
+    const v = validateThresholds(warning, danger);
     if (!v.ok) return setThresholdError(v.error ?? null);
     setThresholdError(null);
-    updateSettings({ [key]: value });
+    updateSettings({ warningThreshold: warning, dangerThreshold: danger });
   };
 
   return (
@@ -149,19 +150,25 @@ export function SettingsPanel({ onClose }: SettingsPanelProps) {
         <Section title="提醒阈值">
           <NumberField
             label={`警告阈值（真元偏弱）`}
-            suffix={`${settings.warningThreshold}%`}
-            value={settings.warningThreshold}
+            suffix={`${warnInput}%`}
+            value={warnInput}
             min={1}
             max={100}
-            onChange={(v) => changeThreshold("warningThreshold", v)}
+            onChange={(v) => {
+              setWarnInput(v);
+              applyThresholds(v, dangerInput);
+            }}
           />
           <NumberField
             label={`危险阈值（道基不稳）`}
-            suffix={`${settings.dangerThreshold}%`}
-            value={settings.dangerThreshold}
+            suffix={`${dangerInput}%`}
+            value={dangerInput}
             min={0}
             max={99}
-            onChange={(v) => changeThreshold("dangerThreshold", v)}
+            onChange={(v) => {
+              setDangerInput(v);
+              applyThresholds(warnInput, v);
+            }}
           />
           {thresholdError && <p className="text-red-400">{thresholdError}</p>}
           <Toggle
