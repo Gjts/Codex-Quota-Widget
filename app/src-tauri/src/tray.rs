@@ -14,8 +14,15 @@ pub fn create_tray<R: Runtime>(app: &AppHandle<R>) -> tauri::Result<()> {
     let sep = PredefinedMenuItem::separator(app)?;
     let menu = Menu::with_items(app, &[&toggle, &refresh, &edit, &settings, &sep, &quit])?;
 
+    let icon = app.default_window_icon().cloned().ok_or_else(|| {
+        std::io::Error::new(
+            std::io::ErrorKind::NotFound,
+            "default window icon is not configured",
+        )
+    })?;
+
     TrayIconBuilder::with_id("main-tray")
-        .icon(app.default_window_icon().unwrap().clone())
+        .icon(icon)
         .tooltip("Codex Quota Widget · 灵狐小管家")
         .menu(&menu)
         .show_menu_on_left_click(false)

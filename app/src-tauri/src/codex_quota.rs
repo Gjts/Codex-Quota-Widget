@@ -124,13 +124,31 @@ fn spawn_codex_app_server() -> Result<Child, String> {
 fn resolve_codex_path() -> PathBuf {
     candidate_path("CODEX_CLI_PATH")
         .filter(|path| path.exists())
-        .or_else(|| {
-            env::var_os("LOCALAPPDATA")
-                .map(PathBuf::from)
-                .map(|base| base.join("OpenAI").join("Codex").join("bin").join("codex.exe"))
-                .filter(|path| path.exists())
-        })
+        .or_else(default_codex_path)
         .unwrap_or_else(|| Path::new("codex").to_path_buf())
+}
+
+/// Best-effort default install location for the Codex CLI on Windows.
+#[cfg(windows)]
+fn default_codex_path() -> Option<PathBuf> {
+    env::var_os("LOCALAPPDATA")
+        .map(PathBuf::from)
+        .map(|base| base.join("OpenAI").join("Codex").join("bin").join("codex.exe"))
+        .filter(|path| path.exists())
+}
+
+/// Best-effort default install locations for the Codex CLI on macOS / Linux
+/// (per-user Codex dir, npm `--prefix`, and Homebrew). Falls back to PATH.
+#[cfg(not(windows))]
+fn default_codex_path() -> Option<PathBuf> {
+    let mut candidates: Vec<PathBuf> = Vec::new();
+    if let Some(home) = env::var_os("HOME").map(PathBuf::from) {
+        candidates.push(home.join(".codex").join("bin").join("codex"));
+        candidates.push(home.join(".local").join("bin").join("codex"));
+    }
+    candidates.push(PathBuf::from("/opt/homebrew/bin/codex"));
+    candidates.push(PathBuf::from("/usr/local/bin/codex"));
+    candidates.into_iter().find(|path| path.exists())
 }
 
 fn candidate_path(name: &str) -> Option<PathBuf> {
@@ -380,5 +398,114 @@ mod tests {
 
         assert_eq!(snapshot.five_hour_remaining_percent, Some(20.0));
         assert_eq!(snapshot.weekly_remaining_percent, Some(90.0));
+    }
+
+    #[test]
+    fn assigns_windows_by_duration_regardless_of_order() {
+        let (five, weekly) =
+            assign_windows(Some(window(40.0, Some(10080))), Some(window(68.0, Some(300))));
+        assert_eq!(five.unwrap().remaining_percent, 68.0);
+        assert_eq!(weekly.unwrap().remaining_percent, 40.0);
+    }
+
+    #[test]
+    fn assigns_windows_falls_back_to_order_without_duration() {
+        let (five, weekly) =
+            assign_windows(Some(window(20.0, None)), Some(window(90.0, None)));
+        assert_eq!(five.unwrap().remaining_percent, 20.0);
+        assert_eq!(weekly.unwrap().remaining_percent, 90.0);
+    }
+
+    #[test]
+    fn assigns_single_window_to_five_hour() {
+        let (five, weekly) = assign_windows(Some(window(55.0, None)), None);
+        assert_eq!(five.unwrap().remaining_percent, 55.0);
+        assert!(weekly.is_none());
+    }
+
+    #[test]
+    fn normalize_window_prefers_remaining_then_used() {
+        assert_eq!(
+            normalize_window(Some(&json!({ "remainingPercent": 42 })))
+                .unwrap()
+                .remaining_percent,
+            42.0
+        );
+        assert_eq!(
+            normalize_window(Some(&json!({ "usedPercent": 73 })))
+                .unwrap()
+                .remaining_percent,
+            27.0
+        );
+        assert!(normalize_window(Some(&json!({ "foo": 1 }))).is_none());
+        assert!(normalize_window(None).is_none());
+    }
+
+    #[test]
+    fn normalize_window_reads_either_reset_field() {
+        let resets_at =
+            normalize_window(Some(&json!({ "remainingPercent": 10, "resetsAt": 111 }))).unwrap();
+        assert_eq!(resets_at.reset_at_unix_seconds, Some(111));
+
+        let reset_at =
+            normalize_window(Some(&json!({ "remainingPercent": 10, "resetAt": 222 }))).unwrap();
+        assert_eq!(reset_at.reset_at_unix_seconds, Some(222));
+    }
+
+    #[test]
+    fn clamp_percent_bounds_and_rounds() {
+        assert_eq!(clamp_percent(150.0), 100.0);
+        assert_eq!(clamp_percent(-5.0), 0.0);
+        assert_eq!(clamp_percent(31.7), 32.0);
+        assert_eq!(clamp_percent(f64::NAN), 0.0);
+        assert_eq!(clamp_percent(f64::INFINITY), 0.0);
+    }
+
+    #[test]
+    fn field_f64_parses_numbers_and_strings() {
+        assert_eq!(field_f64(&json!({ "a": 12.5 }), "a"), Some(12.5));
+        assert_eq!(field_f64(&json!({ "a": "30" }), "a"), Some(30.0));
+        assert_eq!(field_f64(&json!({ "a": "x" }), "a"), None);
+        assert_eq!(field_f64(&json!({ "a": true }), "a"), None);
+        assert_eq!(field_f64(&json!({}), "a"), None);
+    }
+
+    #[test]
+    fn field_i64_parses_numbers_floats_and_strings() {
+        assert_eq!(field_i64(&json!({ "a": 100 }), "a"), Some(100));
+        assert_eq!(field_i64(&json!({ "a": 100.9 }), "a"), Some(100));
+        assert_eq!(field_i64(&json!({ "a": "123" }), "a"), Some(123));
+        assert_eq!(field_i64(&json!({ "a": "nope" }), "a"), None);
+    }
+
+    #[test]
+    fn concise_error_collapses_whitespace_and_truncates() {
+        assert_eq!(concise_error("  multi\n  line\t text  "), "multi line text");
+        assert_eq!(concise_error(&"x".repeat(500)).chars().count(), 240);
+    }
+
+    #[test]
+    fn find_snapshot_prefers_codex_then_rate_limits() {
+        let by_id = json!({ "rateLimitsByLimitId": { "codex": { "k": 1 } } });
+        assert_eq!(find_snapshot(&by_id), by_id.pointer("/rateLimitsByLimitId/codex"));
+
+        let rate_limits = json!({ "rateLimits": { "k": 2 } });
+        assert_eq!(find_snapshot(&rate_limits), rate_limits.get("rateLimits"));
+
+        assert!(find_snapshot(&json!({})).is_none());
+    }
+
+    #[test]
+    fn normalize_response_errors_without_windows() {
+        assert!(normalize_response(&json!({})).is_err());
+        assert!(normalize_response(&json!({ "rateLimits": {} })).is_err());
+    }
+
+    fn window(remaining_percent: f64, window_duration_mins: Option<i64>) -> QuotaWindow {
+        QuotaWindow {
+            remaining_percent,
+            reset_at_unix_seconds: None,
+            window_duration_mins,
+        }
     }
 }
