@@ -21,6 +21,8 @@ export interface AppSettings {
   warningThreshold: number;
   /** Danger threshold (%), default 15. Must stay below warningThreshold. */
   dangerThreshold: number;
+  /** Auto-read local Codex quota via `codex app-server` on an interval. */
+  autoReadEnabled: boolean;
   quotaRefreshIntervalMinutes: number;
 }
 
@@ -38,6 +40,7 @@ export const DEFAULT_SETTINGS: AppSettings = {
   xianxiaCopyEnabled: true,
   warningThreshold: 30,
   dangerThreshold: 15,
+  autoReadEnabled: true,
   quotaRefreshIntervalMinutes: 5,
 };
 

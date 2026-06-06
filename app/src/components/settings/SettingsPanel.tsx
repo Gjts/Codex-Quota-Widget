@@ -80,6 +80,31 @@ export function SettingsPanel({ onClose }: SettingsPanelProps) {
       </div>
 
       <div className="flex-1 space-y-3 overflow-y-auto px-3 py-2 text-xs">
+        <Section title="数据来源">
+          <Toggle
+            label="自动读取本机 Codex 额度"
+            checked={settings.autoReadEnabled}
+            onChange={(v) => updateSettings({ autoReadEnabled: v })}
+          />
+          {settings.autoReadEnabled && (
+            <NumberField
+              label="刷新间隔"
+              suffix="分钟"
+              value={settings.quotaRefreshIntervalMinutes}
+              min={1}
+              max={120}
+              onChange={(v) =>
+                updateSettings({ quotaRefreshIntervalMinutes: Math.max(1, v) })
+              }
+            />
+          )}
+          <p className="text-[10px] leading-snug opacity-60">
+            {settings.autoReadEnabled
+              ? "通过 codex app-server 定时读取并覆盖下方手动值；未装 Codex 或失败时自动回退手动。"
+              : "已关闭：仅使用下方手动录入的额度。"}
+          </p>
+        </Section>
+
         <Section title="额度 · 手动录入">
           <Field label="灵力 · 5小时剩余 %">
             <input

@@ -29,12 +29,12 @@ scripts\dev.cmd                       # 推荐：注入 MSVC 环境后 pnpm taur
 ## 测试
 
 ```powershell
-pnpm test        # Vitest：33 个单元测试 / 8 个文件
+pnpm test        # Vitest 单元测试
 pnpm typecheck   # tsc --noEmit
 pnpm build       # 前端生产构建（Vite）
 ```
 
-覆盖：状态计算、倒计时格式化、Zustand store、表单校验、通知防骚扰守卫、持久化转换、组件渲染。
+覆盖：状态计算、倒计时格式化、本机 Codex 额度适配、Zustand store、表单校验、通知防骚扰守卫、持久化转换、组件渲染。
 
 ## 打包
 
@@ -59,7 +59,7 @@ src/
 │   ├── settings/SettingsPanel  设置面板（手动额度 + 阈值 + 窗口 + 主题）
 │   └── theme/SpiritFox         灵狐 SVG（6 种状态表情）
 ├── features/
-│   ├── quota/                  getQuotaStatus · formatCountdown · 文案 · mock · 倒计时 hook
+│   ├── quota/                  本机 Codex 适配 · getQuotaStatus · formatCountdown · 文案 · mock · 倒计时 hook
 │   ├── settings/validation     表单校验
 │   ├── persistence/repository  tauri-plugin-store 读写（NaN↔null 归一化）
 │   └── notification/           shouldNotify 守卫 · 文案 · notify · hook
@@ -67,7 +67,8 @@ src/
 ├── types/                      quota / settings 类型
 └── lib/                        isTauri / 窗口封装
 src-tauri/
-├── src/{main,lib,tray}.rs      Tauri 后端 + 系统托盘 + 关闭到托盘
+├── src/{main,lib,tray,codex_quota}.rs
+│                                Tauri 后端 + 本机 Codex 额度命令 + 系统托盘 + 关闭到托盘
 ├── capabilities/default.json   权限（window / store / notification）
 └── tauri.conf.json             窗口（透明 / 无边框 / 置顶 / 280×180）+ bundle
 scripts/                        vsenv（VS2019 环境）· dev.cmd · build.cmd
@@ -78,4 +79,4 @@ scripts/                        vsenv（VS2019 环境）· dev.cmd · build.cmd
 - **窗口位置记忆**：MVP 未实现。`window-state` 插件在本机会把窗口还原成最小化的隐形窗，已移除 → V1.0。
 - **macOS 透明窗**：需在 `tauri.conf.json` 开 `app.macOSPrivateApi: true` 并为 `tauri` 启用 `macos-private-api` feature（未在 Windows 构建启用，以免影响）。
 - **dev 下通知来源**显示为「Windows PowerShell」：`tauri dev` 寄宿在该进程；打包安装后显示应用名。
-- 自动读取 / 粘贴解析 / 开机自启 / 历史趋势 → V1.0（见根 [README](../README.zh-CN.md) 路线图）。
+- 粘贴解析 / 开机自启 / 历史趋势 → V1.0（见根 [README](../README.zh-CN.md) 路线图）。

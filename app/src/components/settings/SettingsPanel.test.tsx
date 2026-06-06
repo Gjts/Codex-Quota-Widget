@@ -33,4 +33,20 @@ describe("SettingsPanel", () => {
     fireEvent.click(screen.getByText("保存额度"));
     expect(screen.getByText(/百分比需在/)).toBeInTheDocument();
   });
+
+  it("toggles auto-read and reveals/hides the interval field", () => {
+    useAppStore.getState().updateSettings({ autoReadEnabled: true });
+    render(<SettingsPanel onClose={() => {}} />);
+    expect(screen.getByText("数据来源")).toBeInTheDocument();
+    expect(screen.getByText("刷新间隔")).toBeInTheDocument(); // shown when on
+
+    const toggle = screen
+      .getByText("自动读取本机 Codex 额度")
+      .closest("label")!
+      .querySelector("input")!;
+    fireEvent.click(toggle); // turn off
+
+    expect(useAppStore.getState().settings.autoReadEnabled).toBe(false);
+    expect(screen.queryByText("刷新间隔")).not.toBeInTheDocument(); // hidden when off
+  });
 });

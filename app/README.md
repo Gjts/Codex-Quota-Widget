@@ -29,12 +29,12 @@ Preview just the frontend UI in a browser (no Rust/Tauri): `pnpm dev` → <http:
 ## Test
 
 ```powershell
-pnpm test        # Vitest: 33 unit tests / 8 files
+pnpm test        # Vitest unit tests
 pnpm typecheck   # tsc --noEmit
 pnpm build       # frontend production build (Vite)
 ```
 
-Coverage: status calc, countdown formatting, Zustand store, form validation, notification anti-spam guard, persistence transforms, component rendering.
+Coverage: status calc, countdown formatting, local Codex quota adapter, Zustand store, form validation, notification anti-spam guard, persistence transforms, component rendering.
 
 ## Package
 
@@ -59,7 +59,7 @@ src/
 │   ├── settings/SettingsPanel  settings panel (manual quota + thresholds + window + theme)
 │   └── theme/SpiritFox         SpiritFox SVG (6 status expressions)
 ├── features/
-│   ├── quota/                  getQuotaStatus · formatCountdown · copy · mock · countdown hook
+│   ├── quota/                  local Codex adapter · getQuotaStatus · formatCountdown · copy · mock · countdown hook
 │   ├── settings/validation     form validation
 │   ├── persistence/repository  tauri-plugin-store read/write (NaN↔null normalization)
 │   └── notification/           shouldNotify guard · copy · notify · hook
@@ -67,7 +67,8 @@ src/
 ├── types/                      quota / settings types
 └── lib/                        isTauri / window wrappers
 src-tauri/
-├── src/{main,lib,tray}.rs      Tauri backend + system tray + close-to-tray
+├── src/{main,lib,tray,codex_quota}.rs
+│                                Tauri backend + local Codex quota command + system tray + close-to-tray
 ├── capabilities/default.json   permissions (window / store / notification)
 └── tauri.conf.json             window (transparent / frameless / on-top / 280×180) + bundle
 scripts/                        vsenv (VS2019 env) · dev.cmd · build.cmd
@@ -78,4 +79,4 @@ scripts/                        vsenv (VS2019 env) · dev.cmd · build.cmd
 - **Window position memory**: not in the MVP. The `window-state` plugin restored a minimized (invisible) window on this machine, so it was removed → V1.0.
 - **macOS transparent window**: requires `app.macOSPrivateApi: true` in `tauri.conf.json` plus the `macos-private-api` feature on `tauri` (not enabled in the Windows build, to avoid impact).
 - **Notification source in dev** shows as "Windows PowerShell": `tauri dev` is hosted by that process; the packaged app shows the real app name.
-- Auto-read / paste-parse / launch-at-login / history & trends → V1.0 (see the root [README](../README.md) roadmap).
+- Paste-parse / launch-at-login / history & trends → V1.0 (see the root [README](../README.md) roadmap).

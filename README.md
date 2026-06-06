@@ -31,6 +31,7 @@ A plain quota readout is just cold numbers and reset times. Codex Quota Widget r
 - 🦊 SpiritFox changes expression with status: abundant → stable → weak → unstable → depleted (pure SVG, animation toggle)
 - ✍️ Manual quota entry + settings panel (thresholds / display mode / opacity / flavor-text toggle)
 - 💾 Local persistence — survives restarts
+- 🔄 Auto-reads your local Codex quota (`codex app-server`) on an interval — toggle + interval in settings, with graceful fallback to manual entry
 - 🔔 Low-quota desktop notifications (anti-spam: fires once per worsening threshold crossing)
 - 🧭 System tray: show/hide · refresh · edit quota · settings · quit; the close button hides to tray
 - 📐 Mini / standard / full display modes
@@ -94,7 +95,7 @@ Backend plugins: `tauri-plugin-store` (persistence) · `tauri-plugin-notificatio
 
 ## 🧭 Roadmap (V1.0)
 
-Paste-to-parse quota · auto-read Codex quota · launch at login · global hotkeys · multiple skins · click-through · window position memory · history & trends · auto-update · macOS signing/notarization.
+Paste-to-parse quota · launch at login · global hotkeys · multiple skins · click-through · window position memory · history & trends · auto-update · macOS signing/notarization.
 
 ---
 
