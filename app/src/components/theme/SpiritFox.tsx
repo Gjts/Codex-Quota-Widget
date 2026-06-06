@@ -14,7 +14,7 @@ interface Mood {
 }
 
 /** Maps each quota status to a SpiritFox facial expression / mood. */
-export const FOX_MOOD: Record<QuotaStatus, Mood> = {
+const FOX_MOOD: Record<QuotaStatus, Mood> = {
   excellent: { eyes: "sparkle", mouth: "grin", earDroop: 0, aura: 0.95, zzz: false, sweat: false },
   normal: { eyes: "open", mouth: "smile", earDroop: 0, aura: 0.55, zzz: false, sweat: false },
   warning: { eyes: "half", mouth: "neutral", earDroop: 9, aura: 0.32, zzz: false, sweat: false },
