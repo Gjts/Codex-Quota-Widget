@@ -63,7 +63,7 @@ cd Codex-Quota-Widget/app
 pnpm install
 scripts\dev.cmd      # 开发运行（本机自动注入 MSVC 环境）
 scripts\build.cmd    # 打包 Windows 安装包（msi + exe）
-pnpm test            # 33 个单元测试
+pnpm test            # 36 个单元测试
 ```
 
 环境要求、构建细节与已知问题见 **[app/README.md](app/README.md)**。

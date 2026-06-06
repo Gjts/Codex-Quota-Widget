@@ -63,7 +63,7 @@ cd Codex-Quota-Widget/app
 pnpm install
 scripts\dev.cmd      # run dev (auto-injects this machine's MSVC env)
 scripts\build.cmd    # build Windows installers (msi + exe)
-pnpm test            # 33 unit tests
+pnpm test            # 36 unit tests
 ```
 
 Requirements, build details and known issues: **[app/README.md](app/README.md)**.
